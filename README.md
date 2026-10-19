@@ -18,6 +18,17 @@ bun run type-check   # tsc --noEmit
 No database or credentials are required: the service uses an in-memory store that is
 re-seeded on every start.
 
+## Interactive API docs
+
+Once the service is running:
+
+- **Swagger UI:** <http://localhost:8787/docs> — browse and "Try it out" every endpoint.
+- **OpenAPI 3.1 document:** <http://localhost:8787/openapi.json>
+
+The document is generated from the same Zod schemas used for request validation
+(`src/schemas.ts`), and a test fails if any registered route is missing from it.
+The UI loads its assets from a CDN, so the browser needs internet access.
+
 ## Configuration
 
 Reward rules live in `src/config.ts`:
@@ -51,6 +62,8 @@ All bodies are JSON. Errors use this shape:
 | ------ | ---- | ----- | ------- | ----- |
 | `GET`    | `/health` | no | `200 { ok: true }` | |
 | `GET`    | `/products` | no | `200 { products }` | current price and inventory |
+| `GET`    | `/openapi.json` | no | `200 <spec>` | OpenAPI 3.1 document |
+| `GET`    | `/docs` | no | `200 <html>` | Swagger UI |
 | `POST`   | `/carts` | no | `201 { cart }` | create an empty cart |
 | `GET`    | `/carts/:cartId` | no | `200 { cart }` | prices + `subtotalCents` / `totalCents` |
 | `POST`   | `/carts/:cartId/items` | no | `200 { cart }` | body `{ productId, quantity }`, adds or increments |

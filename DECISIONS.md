@@ -205,6 +205,8 @@ hides internals (logged server-side) rather than leaking stack traces.
 - Immutable order snapshots and order retrieval.
 - Milestone coupons: admin generation, single redemption, safe on failure.
 - Admin report (quantities, gross, discounts, net, coupon counts, order count).
+- OpenAPI 3.1 document (`/openapi.json`) and Swagger UI (`/docs`), generated from the shared
+  Zod schemas, with a test that fails if a route is undocumented.
 - Focused tests including competing/repeated operations.
 - Consistent typed error model, CORS, request logging in dev.
 
@@ -279,4 +281,5 @@ I did not include any AI transcripts; this is the concise account requested.
    with expiry, and document the trade-off against the current "validate at checkout" model.
 4. **Coupon edge cases:** expiry, per-customer limits, and what happens if `n`/`x` config changes
    between milestones.
-5. **A tiny OpenAPI/collection** generated from the Zod schemas so API docs can't drift.
+5. **Doc drift hardening:** generate typed clients from `/openapi.json` and add
+   example values/responses to the spec so interactive docs are even easier to explore.

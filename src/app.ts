@@ -1,24 +1,14 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
+import { swaggerUI } from '@hono/swagger-ui'
 import { validator } from 'hono/validator'
 import { z } from 'zod'
 import { defaultConfig, type Config } from './config'
 import { ApiError } from './errors'
+import { openapi } from './openapi'
+import { addItemSchema, checkoutSchema, setQuantitySchema } from './schemas'
 import { Store } from './store'
-
-const addItemSchema = z.object({
-  productId: z.string().min(1),
-  quantity: z.number().int().positive().max(1000),
-})
-
-const setQuantitySchema = z.object({
-  quantity: z.number().int().positive().max(1000),
-})
-
-const checkoutSchema = z.object({
-  couponCode: z.string().min(1).optional(),
-})
 
 /** Validates a JSON body with zod and throws a typed ApiError on failure. */
 const json = <T extends z.ZodType>(schema: T) =>
@@ -45,7 +35,14 @@ export function createApp(config: Config = defaultConfig, options: { log?: boole
   app.get('/health', (c) => c.json({ ok: true }))
   app.get('/products', (c) => c.json({ products: store.listProducts() }))
 
-  app.post('/carts', (c) => c.json({ cart: store.createCart() }, 201))
+  // API documentation: raw spec + interactive Swagger UI.
+  app.get('/openapi.json', (c) => c.json(openapi))
+  app.get('/docs', swaggerUI({ url: '/openapi.json' }))
+
+  app.post('/carts', (c) => {
+    const cart = store.createCart()
+    return c.json({ cart: store.getCartView(cart.id) }, 201)
+  })
   app.get('/carts/:cartId', (c) => c.json({ cart: store.getCartView(c.req.param('cartId')) }))
 
   app.post('/carts/:cartId/items', json(addItemSchema), (c) => {

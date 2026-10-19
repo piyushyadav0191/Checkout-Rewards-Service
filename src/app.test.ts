@@ -148,6 +148,30 @@ describe('rewards', () => {
   })
 })
 
+describe('docs', () => {
+  it('serves an OpenAPI spec that documents every registered route', async () => {
+    const app = createApp()
+    const spec = await api(app, 'GET', '/openapi.json')
+    expect(spec.status).toBe(200)
+    expect(spec.body.openapi).toBe('3.1.0')
+
+    const documented = Object.keys(spec.body.paths)
+    const toOpenApiPath = (path: string) => path.replace(/:([A-Za-z0-9_]+)/g, '{$1}')
+    const routes = app.routes
+      .filter((route) => route.method !== 'ALL' && !['/docs', '/openapi.json'].includes(route.path))
+      .map((route) => toOpenApiPath(route.path))
+
+    expect(routes.length).toBeGreaterThan(0)
+    for (const path of routes) expect(documented).toContain(path)
+  })
+
+  it('serves the Swagger UI page', async () => {
+    const res = await createApp().request('/docs')
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toContain('text/html')
+  })
+})
+
 describe('reporting', () => {
   it('reconciles with orders and coupons and does not mutate state', async () => {
     const app = createApp({ rewardEveryN: 1, rewardPercentX: 10 })
