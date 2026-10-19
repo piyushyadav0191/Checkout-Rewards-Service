@@ -132,3 +132,4 @@ Full reasoning, trade-offs and deferred work are in [`DECISIONS.md`](./DECISIONS
 `src/app.test.ts` covers validation, concurrent oversell, retry idempotency (sequential and
 concurrent), coupon milestone generation, concurrent coupon redemption, failed-checkout
 coupon safety, rounding, and report reconciliation/read-only behavior.
+# Checkout-Rewards-Service
