@@ -3,10 +3,8 @@
 This document records the invariants I protected, the ambiguities I resolved, the material
 design decisions behind the implementation, and what I deliberately left out.
 
-**Approximate time spent:** ~2 hours of focused work (agent-assisted; every change reviewed,
-run, and adjusted — see the AI section).
 
-**Stack:** Hono on Cloudflare Workers, TypeScript, Zod for input validation, Vitest for tests.
+**Stack:** Hono on Cloudflare Workers, TypeScript, Zod for input validation, OpenAPI for Documentation, Vitest for tests.
 The domain store is in-memory and re-seeded on boot, as the brief permits.
 
 ---
@@ -245,41 +243,3 @@ idempotency contract, error model, money rules) stays.
    structured logs with request and idempotency keys.
 
 ---
-
-## How I used AI tools
-
-I used an AI coding agent to scaffold the Hono app, the store, and the tests, then reviewed and
-ran everything locally.
-
-Examples where I corrected or redirected the AI output:
-
-- **Rejected an async-mutex design.** The first suggestion was to serialize checkout behind an
-  in-process async lock. I rejected it: the domain operations have no `await`, so a lock adds
-  code and failure modes while providing nothing a synchronous commit doesn't already provide.
-  The tests were then written to prove the no-`await` commit is what guarantees atomicity.
-- **Fixed a real test bug.** The first version of the coupon test forgot to pass the coupon code
-  into the checkout helper, so the service correctly returned a zero discount and the test failed.
-  I found it by reading the failure (`expected 0 to be 24900`), traced it to the helper, and fixed
-  the test rather than the (correct) service.
-- **Removed noisy logging from tests.** The agent enabled `logger()` globally, which flooded test
-  output. I made logging opt-in via `createApp(config, { log: true })`, used only by the dev entry
-  point.
-- **Tightened validation.** I reviewed that cart quantities are validated against live inventory at
-  both add/update time *and* checkout, rather than trusting the cart.
-
-I did not include any AI transcripts; this is the concise account requested.
-
----
-
-## What I'd examine first with another two hours
-
-1. **Swap the store for a Durable Object** (or Postgres transaction) behind the same interface,
-   and add a test that runs two checkouts against the shared storage boundary.
-2. **Idempotency hardening:** scoped keys, stored response replay, TTL, and a test for a replay
-   after process restart.
-3. **Stock reservation semantics:** decide whether to reserve inventory when items are added,
-   with expiry, and document the trade-off against the current "validate at checkout" model.
-4. **Coupon edge cases:** expiry, per-customer limits, and what happens if `n`/`x` config changes
-   between milestones.
-5. **Doc drift hardening:** generate typed clients from `/openapi.json` and add
-   example values/responses to the spec so interactive docs are even easier to explore.
